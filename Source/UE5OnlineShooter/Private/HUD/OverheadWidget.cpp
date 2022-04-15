@@ -3,6 +3,7 @@
 
 #include "HUD/OverheadWidget.h"
 #include "Components/TextBlock.h"
+#include "GameFramework/PlayerState.h"
 
 void UOverheadWidget::SetDisplayText(FString TextToDisplay)
 {
@@ -14,11 +15,11 @@ void UOverheadWidget::SetDisplayText(FString TextToDisplay)
 
 void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn)
 {
-	//ENetRole LocalRole = InPawn->GetLocalRole();
-	ENetRole RemoteRole = InPawn->GetRemoteRole();
+	ENetRole LocalRole = InPawn->GetLocalRole();
+	//ENetRole RemoteRole = InPawn->GetRemoteRole();
 	FString Role;
-	//switch (LocalRole)
-	switch (RemoteRole)
+	switch (LocalRole)
+	//switch (RemoteRole)
 	{
 	case ENetRole::ROLE_Authority:
 		Role = FString("Authority");
@@ -33,9 +34,12 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn)
 		Role = FString("None");
 		break;
 	}
-	//FString LocalRoleString = FString::Printf(TEXT("Local Role: %s"), *Role);
-	FString RemoteRoleString = FString::Printf(TEXT("Remote Role: %s"), *Role);
-	SetDisplayText(RemoteRoleString);
+
+	APlayerState* PlayerState = InPawn->GetPlayerState();
+	FString Name = PlayerState->GetPlayerName();
+	FString LocalRoleString = FString::Printf(TEXT("Local Role: %s\n%s"), *Role, *Name);
+	//FString RemoteRoleString = FString::Printf(TEXT("Remote Role: %s"), *Role);
+	SetDisplayText(LocalRoleString);
 }
 
 void UOverheadWidget::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
