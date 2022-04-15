@@ -169,6 +169,10 @@ void UMenu::HostButtonClicked()
 	HostButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Orange, FString(TEXT("Host clicked. CreateSession call made.")));
+		}
 		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);
 	}
 }
