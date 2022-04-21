@@ -6,6 +6,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "Weapon/Weapon.h"
 
 ABaseShooterCharacter::ABaseShooterCharacter()
 {
@@ -27,10 +29,22 @@ ABaseShooterCharacter::ABaseShooterCharacter()
 	OverheadWidget->SetupAttachment(RootComponent);
 }
 
+void ABaseShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ABaseShooterCharacter, OverlappingWeapon, COND_OwnerOnly);
+}
+
 void ABaseShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void ABaseShooterCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 }
 
 void ABaseShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -75,8 +89,35 @@ void ABaseShooterCharacter::LookUp(float Value)
 	AddControllerPitchInput(Value);
 }
 
-void ABaseShooterCharacter::Tick(float DeltaTime)
+void ABaseShooterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
-	Super::Tick(DeltaTime);
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}
+}
 
+void ABaseShooterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
+{
+	if (IsLocallyControlled())
+	{
+		if (OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(false);
+		}
+	}
+
+	OverlappingWeapon = Weapon;
+
+	if (IsLocallyControlled())
+	{
+		if (OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(true);
+		}
+	}
 }
