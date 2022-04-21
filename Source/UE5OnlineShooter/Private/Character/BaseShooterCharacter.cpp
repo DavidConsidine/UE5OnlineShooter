@@ -8,6 +8,7 @@
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Weapon/Weapon.h"
+#include "CharacterComponents/CombatComponent.h"
 
 ABaseShooterCharacter::ABaseShooterCharacter()
 {
@@ -24,6 +25,9 @@ ABaseShooterCharacter::ABaseShooterCharacter()
 
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+
+	CombatComp = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComp"));
+	CombatComp->SetIsReplicated(true);
 
 	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 	OverheadWidget->SetupAttachment(RootComponent);
@@ -52,11 +56,21 @@ void ABaseShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ThisClass::EquipButtonPressed);
 
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &ThisClass::MoveForward);
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &ThisClass::MoveRight);
 	PlayerInputComponent->BindAxis("Turn Right / Left Mouse", this, &ThisClass::Turn);
 	PlayerInputComponent->BindAxis("Look Up / Down Mouse", this, &ThisClass::LookUp);
+}
+
+void ABaseShooterCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if(CombatComp)
+	{
+		CombatComp->ParentChar = this;
+	}
 }
 
 void ABaseShooterCharacter::MoveForward(float Value)
@@ -87,6 +101,14 @@ void ABaseShooterCharacter::Turn(float Value)
 void ABaseShooterCharacter::LookUp(float Value)
 {
 	AddControllerPitchInput(Value);
+}
+
+void ABaseShooterCharacter::EquipButtonPressed()
+{
+	if (CombatComp && HasAuthority())
+	{
+		CombatComp->EquipWeapon(OverlappingWeapon);
+	}
 }
 
 void ABaseShooterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
